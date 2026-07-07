@@ -1,0 +1,44 @@
+{
+  "name": "Project Logs",
+  "version": "1.0",
+  "iconURL": "",
+  "oauth": {
+    "scope": "read_jobs read_job_materials manage_job_materials publish_job_notes"
+  },
+  "actions": [
+    {
+      "name": "Enable Project Tracking",
+      "type": "online",
+      "entity": "job",
+      "iconURL": "",
+      "event": "enable_project"
+    },
+    {
+      "name": "Enable Project Tracking",
+      "type": "app",
+      "entity": "job",
+      "iconURL": "",
+      "event": "enable_project"
+    },
+    {
+      "name": "Daily Log",
+      "type": "online",
+      "entity": "job",
+      "iconURL": "",
+      "event": "open_daily_log"
+    },
+    {
+      "name": "Daily Log",
+      "type": "app",
+      "entity": "job",
+      "iconURL": "",
+      "event": "open_daily_log"
+    }
+  ],
+  "webhooks": [
+    {
+      "object": "job",
+      "fields": ["status"]
+    }
+  ]
+}
