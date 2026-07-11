@@ -23,7 +23,9 @@ dotnet run --project src/ProjectLogs.Api
 ## Config
 
 - `ConnectionStrings:ProjectLogs` — Azure SQL connection string
-- `ServiceM8:AppSecret` — add-on app secret (validates inbound JWTs)
+- `ServiceM8:AppId` — add-on App ID from Developer Portal
+- `ServiceM8:AppSecret` — add-on app secret (validates JWTs + OAuth client secret)
+- `ServiceM8:CallbackBaseUrl` — public HTTPS URL (e.g. `https://your-app.azurewebsites.net`)
 - Use `dotnet user-secrets` for local dev, Key Vault for production
 
 ## EF Core Migrations
@@ -37,24 +39,37 @@ dotnet ef database update --project src/ProjectLogs.Api
 
 ```
 src/ProjectLogs.Api/
-  Program.cs                          # Service registration + POST /sm8 endpoint
+  Program.cs                          # Service registration, endpoints, error handling
   Data/ProjectLogsDbContext.cs        # EF Core context + model config
-  Entities/                           # ProjectFlag, DailyLog, DailyLogLine
-  ServiceM8/                          # JWT validator, typed REST client, API models
+  Entities/                           # ProjectFlag, DailyLog, DailyLogLine, TenantRegistration
+  ServiceM8/                          # JWT validator, typed REST client, OAuth, API models
   Handlers/                           # Event handlers (enable, open, close-out, webhook)
   Views/PopupRenderer.cs              # HTML rendering for SM8 popup iframe
+  Migrations/                         # EF Core migrations (InitialCreate)
+tests/ProjectLogs.Tests/              # Integration tests (23 tests, LocalDB)
 manifest.json                         # Reference manifest (register in SM8 Developer Portal)
 servicem8-daily-logs-module.md        # Full build brief / spec
 ```
 
 ## ServiceM8 Integration
 
-- **Auth:** Serverless OAuth — SM8 sends a temp token (900s TTL) in each JWT invocation
+- **Per-request auth:** SM8 sends a temp token (900s TTL) in each JWT invocation
+- **Stored auth:** Full OAuth 2.0 code grant for activation + stored refresh tokens
+- **OAuth URLs:** authorize at `https://go.servicem8.com/oauth/authorize`, token at `https://go.servicem8.com/oauth/access_token`
 - **JWT:** HS256 signed with app secret; POST body IS the raw JWT
 - **API base:** `https://api.servicem8.com/api_1.0/`
 - **Endpoints used:** Job, JobMaterial, Note
 - **Scopes:** `read_jobs read_job_materials manage_job_materials publish_job_notes`
 - **SDK:** `https://platform.servicem8.com/sdk/1.0/sdk.css` and `sdk.js`
+
+## Endpoints
+
+| Route | Purpose |
+|---|---|
+| `GET /health` | Health check |
+| `GET /sm8/activate` | OAuth activation — redirects to SM8 authorize |
+| `GET /sm8/oauth/callback` | OAuth callback — exchanges code, stores tokens |
+| `POST /sm8` | SM8 callback — JWT actions, webhooks, invoke |
 
 ## Event Routing
 

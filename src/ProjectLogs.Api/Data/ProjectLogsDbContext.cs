@@ -8,6 +8,7 @@ public class ProjectLogsDbContext(DbContextOptions<ProjectLogsDbContext> options
     public DbSet<ProjectFlag> ProjectFlags => Set<ProjectFlag>();
     public DbSet<DailyLog> DailyLogs => Set<DailyLog>();
     public DbSet<DailyLogLine> DailyLogLines => Set<DailyLogLine>();
+    public DbSet<TenantRegistration> TenantRegistrations => Set<TenantRegistration>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,6 +29,14 @@ public class ProjectLogsDbContext(DbContextOptions<ProjectLogsDbContext> options
             e.Property(d => d.DiaryNoteUuid).HasMaxLength(36);
             e.Property(d => d.JobNumber).HasMaxLength(50);
             e.Property(d => d.Summary).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<TenantRegistration>(e =>
+        {
+            e.HasIndex(t => t.AccountUuid).IsUnique();
+            e.Property(t => t.AccountUuid).HasMaxLength(36);
+            e.Property(t => t.AccessToken).HasMaxLength(2000);
+            e.Property(t => t.RefreshToken).HasMaxLength(2000);
         });
 
         modelBuilder.Entity<DailyLogLine>(e =>
